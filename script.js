@@ -1,40 +1,124 @@
 async function payNow() {
 
-    const response = await fetch(
-        "YOUR_WORKER_URL"
-    );
+    const button = document.querySelector("button");
+    const status = document.getElementById("status");
 
-    const order = await response.json();
+    button.disabled = true;
+    button.innerText = "Please Wait...";
+    status.innerHTML = "Creating Razorpay Order...";
 
-    const options = {
+    try {
 
-        key: "YOUR_TEST_KEY_ID",
+        const response = await fetch("https://rough-frost-0867.anishdey0602.workers.dev/", {
+            method: "POST"
+        });
 
-        amount: order.amount,
-
-        currency: order.currency,
-
-        name: "My Website",
-
-        description: "₹1 Test Payment",
-
-        order_id: order.id,
-
-        handler: function (response) {
-
-            alert(
-                "Payment Successful!\n\n" +
-                "Payment ID: " + response.razorpay_payment_id
-            );
-
-            console.log(response);
-
+        if (!response.ok) {
+            throw new Error("HTTP Error : " + response.status);
         }
 
-    };
+        const order = await response.json();
 
-    const rzp = new Razorpay(options);
+        console.log("Order Received:", order);
 
-    rzp.open();
+        if (!order.id) {
+            console.error(order);
+            throw new Error("Invalid Order received from backend.");
+        }
+
+        var options = {
+
+            key: "rzp_test_TCdvMJSoFybix6",
+
+            amount: order.amount,
+
+            currency: order.currency,
+
+            order_id: order.id,
+
+            name: "My Demo Website",
+
+            description: "₹1 Test Payment",
+
+            image: "",
+
+            handler: function (response) {
+
+                console.log("Payment Success");
+
+                console.log(response);
+
+                status.innerHTML =
+                    "<h3 style='color:green'>Payment Successful</h3>" +
+                    "<br>" +
+                    "Payment ID:<br>" +
+                    response.razorpay_payment_id;
+
+            },
+
+            modal: {
+
+                ondismiss: function () {
+
+                    status.innerHTML =
+                        "<span style='color:red'>Payment Cancelled</span>";
+
+                    console.log("Popup Closed");
+
+                }
+
+            },
+
+            prefill: {
+
+                name: "Rishi"
+
+            },
+
+            theme: {
+
+                color: "#3399cc"
+
+            }
+
+        };
+
+        var rzp = new Razorpay(options);
+
+        rzp.on("payment.failed", function (response) {
+
+            console.log("Payment Failed");
+
+            console.log(response.error);
+
+            status.innerHTML =
+                "<span style='color:red'>Payment Failed</span>";
+
+        });
+
+        rzp.open();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        status.innerHTML =
+            "<span style='color:red'>" +
+            error.message +
+            "</span>";
+
+        alert(error.message);
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.innerText = "Pay ₹1";
+
+    }
 
 }
