@@ -1,40 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>UPI QR Demo</title>
-
-<style>
-body{
-    font-family:Arial;
-    text-align:center;
-    margin-top:40px;
-}
-
-#qrcode{
-    margin-top:25px;
-}
-
-button{
-    padding:12px 30px;
-    font-size:18px;
-}
-</style>
+    <title>Razorpay Test Payment</title>
 </head>
-
 <body>
 
-<h1>Pay ₹1</h1>
+<h2>Pay ₹1</h2>
 
-<div id="qrcode"></div>
+<button id="payBtn">Pay ₹1</button>
 
-<br>
-
-<button onclick="generateQR()">
-Generate QR
-</button>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script src="script.js"></script>
 
