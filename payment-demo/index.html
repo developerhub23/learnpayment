@@ -1,1 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>UPI QR Demo</title>
 
+<style>
+body{
+    font-family:Arial;
+    text-align:center;
+    margin-top:40px;
+}
+
+#qrcode{
+    margin-top:25px;
+}
+
+button{
+    padding:12px 30px;
+    font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Pay ₹1</h1>
+
+<div id="qrcode"></div>
+
+<br>
+
+<button onclick="generateQR()">
+Generate QR
+</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+</html>
