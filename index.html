@@ -1,17 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Razorpay Test Payment</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay ₹1 Test Payment</title>
+
+    <!-- Razorpay Checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,sans-serif;
+        }
+
+        body{
+            background:#f5f5f5;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+
+        .card{
+            width:350px;
+            background:white;
+            padding:30px;
+            border-radius:15px;
+            text-align:center;
+            box-shadow:0 0 15px rgba(0,0,0,.15);
+        }
+
+        h1{
+            margin-bottom:15px;
+        }
+
+        p{
+            margin-bottom:20px;
+            color:#555;
+        }
+
+        button{
+            width:100%;
+            padding:15px;
+            font-size:18px;
+            border:none;
+            border-radius:10px;
+            background:#3399cc;
+            color:white;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#2277aa;
+        }
+
+        #status{
+            margin-top:20px;
+            color:green;
+            word-wrap:break-word;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Pay ₹1</h2>
+<div class="card">
 
-<button id="payBtn">Pay ₹1</button>
+    <h1>₹1 Test Payment</h1>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <p>Click below to pay ₹1 using Razorpay Test Mode.</p>
 
-<script src="script.js"></script>
+    <button onclick="payNow()">
+        Pay ₹1
+    </button>
+
+    <div id="status"></div>
+
+</div>
+
+<script>
+
+async function payNow(){
+
+    document.getElementById("status").innerHTML="Creating Order...";
+
+    try{
+
+        const response=await fetch("https://rough-frost-0867.anishdey0602.workers.dev/",{
+            method:"POST"
+        });
+
+        const order=await response.json();
+
+        console.log(order);
+
+        if(order.error){
+
+            alert(order.error.description || "Order Creation Failed");
+
+            return;
+
+        }
+
+        var options={
+
+            key:"rzp_test_TCdvMJSoFybix6",
+
+            amount:order.amount,
+
+            currency:order.currency,
+
+            name:"My Demo Website",
+
+            description:"₹1 Test Payment",
+
+            order_id:order.id,
+
+            handler:function(response){
+
+                console.log(response);
+
+                document.getElementById("status").innerHTML=
+                "<b>Payment Successful</b><br><br>"
+                +"Payment ID:<br>"+response.razorpay_payment_id;
+
+            },
+
+            prefill:{
+
+                name:"Rishi",
+
+                email:"",
+
+                contact:""
+
+            },
+
+            theme:{
+                color:"#3399cc"
+            }
+
+        };
+
+        var rzp=new Razorpay(options);
+
+        rzp.open();
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        alert("Something went wrong.");
+
+    }
+
+}
+
+</script>
 
 </body>
 </html>
