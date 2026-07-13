@@ -86,14 +86,12 @@
   <h1>My Developer Store</h1>
 
   <div class="store-container">
-    <!-- Product 1 -->
     <div class="product-card">
       <div class="product-name">JavaScript E-Book</div>
       <div class="product-price">₹299</div>
       <button class="buy-btn" data-product="prod_ebook">Buy E-Book</button>
     </div>
 
-    <!-- Product 2 -->
     <div class="product-card">
       <div class="product-name">Fullstack Mastery</div>
       <div class="product-price">₹1499</div>
@@ -119,7 +117,6 @@
       buyButtons.forEach(btn => btn.disabled = disable);
     }
 
-    // Attach click events to all buy buttons
     buyButtons.forEach(button => {
       button.addEventListener("click", () => {
         const productId = button.getAttribute("data-product");
@@ -139,7 +136,6 @@
       setStatus("Creating order securely on server...", "info");
 
       try {
-        // 1. Send ONLY the Product ID to the backend
         const orderResponse = await fetch(WORKER_URL + "create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -154,7 +150,6 @@
 
         setStatus("Order created. Awaiting payment...", "info");
 
-        // 2. Initialize Checkout (Amount is strictly what the server returned)
         const options = {
           key: RAZORPAY_KEY_ID,
           amount: order.amount,
@@ -169,7 +164,6 @@
             setStatus("Payment captured! Verifying cryptographic signature...", "info");
             
             try {
-              // 3. Verify Payment
               const verifyResponse = await fetch(WORKER_URL + "verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
