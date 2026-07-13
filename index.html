@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Razorpay ₹1 Test Payment</title>
+  <title>Razorpay Secure Store</title>
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
@@ -17,46 +17,64 @@
     body {
       background: #f5f5f5;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      padding: 40px 20px;
+      min-height: 100vh;
     }
-    .card {
-      width: 360px;
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+    .store-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 800px;
+    }
+    .product-card {
+      width: 280px;
       background: #fff;
-      padding: 30px;
-      border-radius: 15px;
+      padding: 25px;
+      border-radius: 12px;
       text-align: center;
-      box-shadow: 0 0 15px rgba(0,0,0,.15);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    h1 { margin-bottom: 15px; }
-    p {
+    .product-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .product-price {
+      font-size: 1.5rem;
+      color: #3399cc;
       margin-bottom: 20px;
-      color: #555;
     }
     button {
       width: 100%;
-      padding: 15px;
-      font-size: 18px;
+      padding: 12px;
+      font-size: 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       background: #3399cc;
       color: #fff;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.2s;
     }
     button:disabled {
-      opacity: 0.7;
+      background: #ccc;
       cursor: not-allowed;
     }
     button:hover:not(:disabled) {
       background: #287ba8;
     }
     #status {
-      margin-top: 18px;
+      margin-top: 30px;
       font-weight: bold;
-      word-break: break-word;
-      line-height: 1.5;
+      font-size: 1.1rem;
+      text-align: center;
+      max-width: 600px;
     }
     .success { color: #2e7d32; }
     .error { color: #c62828; }
@@ -64,54 +82,68 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>₹1 Test Payment</h1>
-    <p>Click below to pay ₹1 using Razorpay Test Mode.</p>
 
-    <button id="payBtn" disabled>Loading...</button>
-    <div id="status"></div>
+  <h1>My Developer Store</h1>
+
+  <div class="store-container">
+    <!-- Product 1 -->
+    <div class="product-card">
+      <div class="product-name">JavaScript E-Book</div>
+      <div class="product-price">₹299</div>
+      <button class="buy-btn" data-product="prod_ebook">Buy E-Book</button>
+    </div>
+
+    <!-- Product 2 -->
+    <div class="product-card">
+      <div class="product-name">Fullstack Mastery</div>
+      <div class="product-price">₹1499</div>
+      <button class="buy-btn" data-product="prod_course">Buy Course</button>
+    </div>
   </div>
 
+  <div id="status"></div>
+
   <script>
-    // Make sure to include the trailing slash if it's the root of the worker
     const WORKER_URL = "https://rough-frost-0867.anishdey0602.workers.dev/";
     const RAZORPAY_KEY_ID = "rzp_test_TCdvMJSoFybix6";
 
-    const payBtn = document.getElementById("payBtn");
+    const buyButtons = document.querySelectorAll(".buy-btn");
     const statusBox = document.getElementById("status");
 
-    // UI Helper function
     function setStatus(msg, type = "info") {
-      statusBox.className = type; // Applies color via CSS classes (success, error, info)
+      statusBox.className = type; 
       statusBox.innerHTML = msg;
     }
 
-    // Initialize button state
-    window.addEventListener("load", () => {
+    function toggleButtons(disable) {
+      buyButtons.forEach(btn => btn.disabled = disable);
+    }
+
+    // Attach click events to all buy buttons
+    buyButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const productId = button.getAttribute("data-product");
+        processPaymentFlow(productId, button);
+      });
+    });
+
+    async function processPaymentFlow(productId, clickedButton) {
       if (typeof Razorpay === "undefined") {
-        setStatus("Razorpay Checkout failed to load. Check your internet connection.", "error");
-        payBtn.disabled = true;
-        payBtn.innerText = "Unavailable";
+        setStatus("Razorpay failed to load. Check internet connection.", "error");
         return;
       }
 
-      payBtn.disabled = false;
-      payBtn.innerText = "Pay ₹1";
-      setStatus("");
-    });
-
-    payBtn.addEventListener("click", processPaymentFlow);
-
-    async function processPaymentFlow() {
-      payBtn.disabled = true;
-      payBtn.innerText = "Please Wait...";
-      setStatus("Creating Razorpay order...", "info");
+      toggleButtons(true);
+      const originalText = clickedButton.innerText;
+      clickedButton.innerText = "Processing...";
+      setStatus("Creating order securely on server...", "info");
 
       try {
-        // 1. Fetch Order ID from backend
+        // 1. Send ONLY the Product ID to the backend
         const orderResponse = await fetch(WORKER_URL + "create-order", {
           method: "POST",
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: productId })
         });
 
         const order = await orderResponse.json();
@@ -120,30 +152,24 @@
           throw new Error(order.error || "Failed to create order on server.");
         }
 
-        console.log("Order created successfully:", order);
-        setStatus("Order created. Waiting for payment...", "info");
+        setStatus("Order created. Awaiting payment...", "info");
 
-        // 2. Initialize Razorpay Checkout
+        // 2. Initialize Checkout (Amount is strictly what the server returned)
         const options = {
           key: RAZORPAY_KEY_ID,
           amount: order.amount,
           currency: order.currency,
-          name: "My Demo Website",
-          description: "₹1 Test Payment",
+          name: "My Developer Store",
+          description: `Payment for ${order.notes.productName}`,
           order_id: order.id,
-          prefill: {
-            name: "Rishi"
-          },
-          theme: {
-            color: "#3399cc"
-          },
-          // 3. Handle success response from Razorpay
+          prefill: { name: "Test User" },
+          theme: { color: "#3399cc" },
+          
           handler: async function (response) {
-            console.log("Payment completed on frontend, verifying...", response);
-            setStatus("Payment captured. Verifying signature securely...", "info");
+            setStatus("Payment captured! Verifying cryptographic signature...", "info");
             
             try {
-              // 4. Send payment details to backend for cryptographic verification
+              // 3. Verify Payment
               const verifyResponse = await fetch(WORKER_URL + "verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -158,8 +184,7 @@
 
               if (verifyResult.success) {
                 setStatus(
-                  "Payment Verified & Successful! 🎉<br><br>" +
-                  "Payment ID:<br><small>" + response.razorpay_payment_id + "</small>", 
+                  `🎉 Success! Thank you for purchasing.<br><small>Order ID: ${response.razorpay_order_id}</small>`, 
                   "success"
                 );
               } else {
@@ -167,38 +192,35 @@
               }
 
             } catch (verifyError) {
-              console.error("Verification failed:", verifyError);
-              setStatus("Payment failed validation: " + verifyError.message, "error");
+              console.error(verifyError);
+              setStatus("Verification failed: " + verifyError.message, "error");
             } finally {
-              payBtn.innerText = "Pay Again";
-              payBtn.disabled = false;
+              toggleButtons(false);
+              clickedButton.innerText = originalText;
             }
           },
           modal: {
             ondismiss: function () {
               setStatus("Payment window closed by user.", "error");
-              payBtn.innerText = "Pay ₹1";
-              payBtn.disabled = false;
+              toggleButtons(false);
+              clickedButton.innerText = originalText;
             }
           }
         };
 
         const rzp = new Razorpay(options);
-
         rzp.on("payment.failed", function (response) {
-          console.error("Payment failed from gateway:", response.error);
           setStatus("Transaction failed: " + response.error.description, "error");
-          payBtn.innerText = "Retry Payment";
-          payBtn.disabled = false;
+          toggleButtons(false);
+          clickedButton.innerText = originalText;
         });
-
         rzp.open();
 
       } catch (error) {
         console.error("Payment Flow Error:", error);
         setStatus(error.message, "error");
-        payBtn.innerText = "Retry Payment";
-        payBtn.disabled = false;
+        toggleButtons(false);
+        clickedButton.innerText = originalText;
       }
     }
   </script>
